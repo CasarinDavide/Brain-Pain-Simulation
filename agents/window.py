@@ -1,5 +1,7 @@
 import pygame
 import random
+
+#classe per gestire la finestra di dialogo, mostra in real time la simulazione
 class AgentBased:
 
     def __init__(self):
@@ -21,7 +23,6 @@ class AgentBased:
                            'y': random.randint(0, self.height),
                            'vx': random.choice([-1, 1]),
                            'vy': random.choice([-1, 1])} for _ in range(self.num_particles)]
-
 
     def simulate(self):
         # Simulation loop
