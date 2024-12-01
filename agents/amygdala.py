@@ -66,25 +66,6 @@ class Neuron_element:
         return self.neuron.is_in_input_neighborhood(neuron)
 
 
-class Neuron_element:
-
-    def __init__(self, neuron, pos, container: Neurons_Container):
-        self.neuron = neuron
-        self.pos = pos
-        self.container = container
-
-    def add_edge_input(self, neuron):
-        self.neuron.add_input_to_neighborhood(neuron)
-
-    def add_edge_output(self, neuron):
-        self.neuron.add_output_to_neighborhood(neuron)
-        if self.neuron.output_degree() == self.container.get_max_out_degree():
-            self.container.hide(self.pos)
-
-    def is_in_input_neighborhood(self,neuron):
-        return self.neuron.is_in_input_neighborhood(neuron)
-
-
 class Neuron_Container_PKC(Neurons_Container):
     def __init__(self, max_out_degree, max_in_degree):
         super().__init__(max_out_degree, max_in_degree)
@@ -183,11 +164,11 @@ class Amygdala:
         types = random.choices(["SOM", "PKC", "OTHER"], weights=self.prob_edges_SOM, k=rnd)
         for type in types:
             if type == "SOM":
-               self.select_output(input_neuron, self.population_SOM)
+                self.select_output(input_neuron, self.population_SOM)
             elif type == "PKC":
-               self.select_output(input_neuron, self.population_PKC)
+                self.select_output(input_neuron, self.population_PKC)
             else:
-              self.select_output(input_neuron, self.population_Other)
+                self.select_output(input_neuron, self.population_Other)
 
     def select_output(self, input_neuron, population):
         selected = False
