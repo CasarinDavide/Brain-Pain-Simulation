@@ -18,7 +18,7 @@ class AgentBased:
         self.BLUE = (0, 0, 255)
         # Colors
         # Initialize agents
-        self.num_particles = 1640
+        self.num_particles = 50
         self.particles = [{'x': random.randint(0, self.width),
                            'y': random.randint(0, self.height),
                            'vx': random.choice([-1, 1]),

@@ -34,7 +34,7 @@ class Neurons_Container:
     def __iter__(self):
         # Initialize a queue with all elements
         self.visiting_queue = queue.Queue()
-        for neuron_element in self.list[:len(self.list)]:  # Only consider active elements
+        for neuron_element in self.list[:len(self.list)]:
             self.visiting_queue.put(neuron_element)
         return self
 
