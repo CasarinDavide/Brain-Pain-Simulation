@@ -2,7 +2,6 @@ import random
 
 import queue
 import neuron_agent as neuronAgent
-import numpy as np
 
 
 class Neurons_Container:
@@ -11,6 +10,9 @@ class Neurons_Container:
         self.available_size = 0
         self.max_out_degree = max_out_degree
         self.max_in_degree = max_in_degree
+        self.LF_population = 0
+        self.RS_population = 0
+        self.SP_population = 0
 
     def hide(self, pos):
         tmp = self.list[pos]
@@ -23,6 +25,14 @@ class Neurons_Container:
 
     def insert(self, neuron):
         self.list.append(Neuron_element(neuron, len(self.list), self))
+
+        if neuron.get_firing_rage_type == 'LF':
+            self.LF_population += 1
+        elif neuron.get_firing_rage_type == 'RS':
+            self.RS_population += 1
+        elif neuron.get_firing_rage_type == 'SP':
+            self.SP_population += 1
+
         self.available_size += 1
 
     def get_max_out_degree(self):
@@ -32,6 +42,9 @@ class Neurons_Container:
         return self.max_in_degree
 
     def __iter__(self):
+
+        # TODO capire come cambiarlo
+
         # Initialize a queue with all elements
         self.visiting_queue = queue.Queue()
         for neuron_element in self.list[:len(self.list)]:
@@ -46,6 +59,23 @@ class Neurons_Container:
 
     def __getitem__(self, item):
         return self.list[item]
+
+    def react_to_stimuli(self, stimuli, cumulative_time_stimuli):
+        for el in self.list:
+            neuron = el.neuron
+            neuron.update_damage(cum_s=cumulative_time_stimuli, stimulation=stimuli)
+
+            if neuron.get_firing_rage_type() == 'SP' and neuron.get_damage() == 100 and self.SP_population / len(
+                    self.list) > 0.48:
+                neuron.change_type_to_RS()
+                self.RS_population += 1
+                self.SP_population -= 1
+
+            neuron.update_frequency(stimulation=stimuli)
+
+    def silence_all_neurons(self):
+        for neuron in self.list:
+            neuron.silence_neuron()
 
 
 class Neuron_element:
@@ -73,6 +103,14 @@ class Neuron_Container_PKC(Neurons_Container):
     def insert(self, neuron: neuronAgent.Neuron_PKC):
         super().insert(neuron)
 
+    def get_total_freq(self):
+        accumulative_freq = 0
+        for neuron in self.list:
+            if neuron.get_firing_rage_type() == 'SP':
+                continue
+            accumulative_freq += neuron.get_damage() * neuron.get_frequency()
+        return accumulative_freq
+
 
 class Neuron_Container_SOM(Neurons_Container):
     def __init__(self, max_out_degree, max_in_degree):
@@ -80,6 +118,14 @@ class Neuron_Container_SOM(Neurons_Container):
 
     def insert(self, neuron: neuronAgent.Neuron_SOM):
         super().insert(neuron)
+
+    def get_total_freq(self):
+        accumulative_freq = 0
+        for neuron in self.list:
+            if neuron.get_firing_rage_type() == 'SP':
+                continue
+            accumulative_freq += neuron.get_frequency()
+        return accumulative_freq
 
 
 class Neuron_Container_other(Neurons_Container):
@@ -132,6 +178,8 @@ class Amygdala:
         self.prob_edges_SOM = [SOM_SOM_connectivity, SOM_PKC_connectivity, SOM_other_connectivity]
         self.prob_edges_PCK = [PKC_PKC_connectivity, PKC_SOM_connectivity, PKC_other_connectivity]
 
+        self.create_network()
+
     def create_network(self):
         PKC_number = int(self.neurons_number * self.PKC_rate)
         SOM_number = int(self.neurons_number * self.SOM_rate)
@@ -181,12 +229,63 @@ class Amygdala:
                 input_neuron.add_edge_input(output_neuron)
                 output_neuron.add_edge_output(input_neuron)
 
+    def update_states(self, stimuli, cumulative_time_stimuli):
+        self.population_SOM.react_to_stimuli(cumulative_time_stimuli, stimuli)
+        self.population_PKC.react_to_stimuli(cumulative_time_stimuli, stimuli)
+        # magari un giorno ...
+        # self.population_Other.react_to_stimuli(cumulative_time_stimuli,stimuli)
+
 
 class Amygdala_R(Amygdala):
-    def __init__(self):
-        return
+    def __init__(self, neurons_number, in_stimulation, SOM_RS_rate, SOM_LF_rate, SOM_SP_rate, PKC_RS_rate, PKC_LF_rate,
+                 PKC_SP_rate, SOM_SOM_connectivity, SOM_PKC_connectivity, SOM_other_connectivity, PKC_PKC_connectivity,
+                 PKC_SOM_connectivity, PKC_other_connectivity,SOM_rate=0.5, PKC_rate=0.4, others_rate=0.1,
+                 in_min_connection=0, in_max_connection=5, out_min_connection=0, out_max_connection=5):
+        super().__init__(neurons_number, in_stimulation, SOM_RS_rate, SOM_LF_rate, SOM_SP_rate, PKC_RS_rate,
+                         PKC_LF_rate, PKC_SP_rate, SOM_SOM_connectivity, SOM_PKC_connectivity, SOM_other_connectivity,
+                         PKC_PKC_connectivity, PKC_SOM_connectivity, PKC_other_connectivity,SOM_rate, PKC_rate, others_rate,
+                         in_min_connection, in_max_connection, out_min_connection, out_max_connection)
+
 
 
 class Amygdala_L(Amygdala):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, neurons_number, in_stimulation, SOM_RS_rate, SOM_LF_rate, SOM_SP_rate, PKC_RS_rate, PKC_LF_rate,
+                 PKC_SP_rate, SOM_SOM_connectivity, SOM_PKC_connectivity, SOM_other_connectivity, PKC_PKC_connectivity,
+                 PKC_SOM_connectivity, PKC_other_connectivity,SOM_rate=0.5, PKC_rate=0.4, others_rate=0.1,
+                 in_min_connection=0, in_max_connection=5, out_min_connection=0, out_max_connection=5):
+        super().__init__(neurons_number, in_stimulation, SOM_RS_rate, SOM_LF_rate, SOM_SP_rate, PKC_RS_rate,
+                         PKC_LF_rate, PKC_SP_rate, SOM_SOM_connectivity, SOM_PKC_connectivity, SOM_other_connectivity,
+                         PKC_PKC_connectivity, PKC_SOM_connectivity, PKC_other_connectivity,SOM_rate, PKC_rate, others_rate,
+                         in_min_connection, in_max_connection, out_min_connection, out_max_connection)
+
+
+class Brain:
+    def __init__(self,neurons_number, in_stimulation, SOM_RS_rate, SOM_LF_rate, SOM_SP_rate, PKC_RS_rate, PKC_LF_rate,
+                 PKC_SP_rate, SOM_SOM_connectivity, SOM_PKC_connectivity, SOM_other_connectivity, PKC_PKC_connectivity,
+                 PKC_SOM_connectivity, PKC_other_connectivity,SOM_rate=0.5, PKC_rate=0.4, others_rate=0.1,
+                 in_min_connection=0, in_max_connection=5, out_min_connection=0, out_max_connection=5):
+        # TODO aggiungere alla parametrizzazione tutti i parametri separandoli dalla regione sx da quella destra
+        # quindi ci saranno sempre gli stessi parametri ma _l o _r
+        # es neurons_number_l e neurons_number_r ....
+        self.amygdala_r = Amygdala_R(neurons_number, in_stimulation, SOM_RS_rate, SOM_LF_rate, SOM_SP_rate, PKC_RS_rate, PKC_LF_rate,
+                                     PKC_SP_rate, SOM_SOM_connectivity, SOM_PKC_connectivity, SOM_other_connectivity, PKC_PKC_connectivity,
+                                     PKC_SOM_connectivity, PKC_other_connectivity,SOM_rate, PKC_rate, others_rate,
+                                     in_min_connection, in_max_connection, out_min_connection, out_max_connection)
+        self.amygdala_l = Amygdala_L(neurons_number, in_stimulation, SOM_RS_rate, SOM_LF_rate, SOM_SP_rate, PKC_RS_rate, PKC_LF_rate,
+                                     PKC_SP_rate, SOM_SOM_connectivity, SOM_PKC_connectivity, SOM_other_connectivity, PKC_PKC_connectivity,
+                                     PKC_SOM_connectivity, PKC_other_connectivity,SOM_rate, PKC_rate, others_rate,
+                                     in_min_connection, in_max_connection, out_min_connection, out_max_connection)
+
+    def get_damage_r(self):
+        return self.amygdala_r.population_PKC.get_total_freq() - self.amygdala_r.population_SOM.get_total_freq()
+
+    def get_damage_l(self):
+        return self.amygdala_l.population_PKC.get_total_freq() - self.amygdala_l.population_SOM.get_total_freq()
+
+    def iterations(self, stimuli, max_duration):
+        damage_list = []
+        for cumulative_time_stimuli in range(1, max_duration):
+            self.amygdala_l.update_states(stimuli, cumulative_time_stimuli)
+            self.amygdala_r.update_states(stimuli, cumulative_time_stimuli)
+
+            damage_list.append((self.get_damage_l(), self.get_damage_r()))
