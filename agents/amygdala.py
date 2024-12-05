@@ -48,6 +48,7 @@ class Neurons_Container:
         # Initialize a queue with all elements
         self.visiting_queue = queue.Queue()
         for neuron_element in self.list[:len(self.list)]:
+
             self.visiting_queue.put(neuron_element)
         return self
 

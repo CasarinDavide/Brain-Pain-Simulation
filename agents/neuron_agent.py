@@ -1,7 +1,9 @@
 # TYPE PKC e SOM e OTHER
 #
 import random
+import pandas as pd
 
+df = pd.read_csv('agents/data_csv/firing_data.csv', sep=';', header=0)
 
 class Neuron:
     def __init__(self, firing_rate=''):
@@ -48,18 +50,34 @@ class Neuron:
 
     def update_frequency(self, stimulation):
 
-        if self.firing_rate != 'SP':
+        if self.firing_rate == 'SP':
             return
             # devo ritornare costante in base al tipo di neurone
             # i neuroni sp hanno una frequenza costante associta
         else:
-
-            # TODO qua crasha to fix
-
-            X = self.getX(stimulation)
-            Y = self.getY(stimulation)
-
+            X,Y = self.getXY(stimulation)
             self.freq = X * (100 - self.accumulate_damage) / 100 + Y * self.accumulate_damage / 100
+            print(self.freq)
+
+    def trunc_gauss(self, mu, sigma, bottom, top):
+        a = random.gauss(mu, sigma)
+        while not (bottom <= a <= top):
+            a = random.gauss(mu, sigma)
+        return a
+
+    def getXY(self, stimulation):
+        stimulation=120
+        type_neuron = type(self).__name__[-3:]
+        row = df[
+            (df['Type'] == type_neuron) &
+            (df['Freq'] == self.firing_rate) &
+            (df['pA'] == str(stimulation))
+            ]
+        row = row.iloc[0].tolist()
+        X = self.trunc_gauss(int(row[3]), int(row[4]), int(row[5]), int(row[6]))  # X_mu X_std X_min X_max
+        Y = self.trunc_gauss(int(row[7]), int(row[8]), int(row[9]), int(row[10]))  # X_mu X_std X_min X_max
+        return X,Y
+
 
     def get_input_neighborhood(self):
         freq = 0
@@ -91,7 +109,6 @@ class Neuron_PKC(Neuron):
 class Neuron_SOM(Neuron):
     def __init__(self, firing_rate):
         super().__init__(firing_rate)
-
 
 class Neuron_Other(Neuron):
     def __init__(self):
