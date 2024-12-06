@@ -69,8 +69,8 @@ class Neuron:
         stimulation=120
         type_neuron = type(self).__name__[-3:]
         row = df[
-            (df['Type'] == type_neuron) and
-            (df['Freq'] == self.firing_rate) and
+            (df['Type'] == type_neuron) &
+            (df['Freq'] == self.firing_rate) &
             (df['pA'] == str(stimulation))
             ]
         row = row.iloc[0].tolist()
