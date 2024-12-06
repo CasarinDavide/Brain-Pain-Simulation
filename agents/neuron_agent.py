@@ -1,9 +1,41 @@
-# TYPE PKC e SOM e OTHER
+# TYPE PCK e SOM e OTHER
 #
 import random
 import pandas as pd
 
-df = pd.read_csv('agents/data_csv/firing_data.csv', sep=';', header=0)
+dtype_dict = {
+    "Type": str,
+    "Freq": str,
+    "pA": str  # Add any other columns to be read as strings
+}
+
+df = pd.read_csv('agents/data_csv/firing_data.csv', sep=';', header=0, dtype=dtype_dict)
+
+
+def trunc_gauss(mu, sigma, bottom, top):
+    a = random.gauss(mu, sigma)
+    while not (bottom <= a <= top):
+        a = random.gauss(mu, sigma)
+    return a
+
+
+def getXY(stimulation, firing_rate, type_neuron):
+    # stimulation=120
+    # type_neuron = type(self).__name__[-3:]
+
+    query_str = f"Type == '{type_neuron}' and Freq == '{firing_rate}' and pA == '{stimulation}'"
+    filtered_rows = df.query(query_str)
+
+    # Check if any rows match
+    if filtered_rows.empty:
+        raise ValueError("No matching row found in the DataFrame for the given parameters.")
+
+    # Extract the first matching row
+    row = filtered_rows.iloc[0].tolist()
+    X = trunc_gauss(int(row[3]), int(row[4]), int(row[5]), int(row[6]))  # X_mu X_std X_min X_max
+    Y = trunc_gauss(int(row[7]), int(row[8]), int(row[9]), int(row[10]))  # X_mu X_std X_min X_max
+    return X, Y
+
 
 class Neuron:
     def __init__(self, firing_rate=''):
@@ -19,7 +51,7 @@ class Neuron:
         self.output_neighborhood = []
         self.is_silence = 1
 
-    def get_firing_rage_type(self):
+    def get_firing_rate_type(self):
         # LF;RS;SP
         return self.firing_rate
 
@@ -51,33 +83,15 @@ class Neuron:
     def update_frequency(self, stimulation):
 
         if self.firing_rate == 'SP':
-            return
-            # devo ritornare costante in base al tipo di neurone
-            # i neuroni sp hanno una frequenza costante associta
+            if type(self) == Neuron_PCK:
+                return 4.8
+            elif type(self) == Neuron_SOM:
+                return 2.1
+            else:
+                return 0
         else:
-            X,Y = self.getXY(stimulation)
+            X, Y = getXY(stimulation, self.firing_rate, type(self).__name__[-3:])
             self.freq = X * (100 - self.accumulate_damage) / 100 + Y * self.accumulate_damage / 100
-            print(self.freq)
-
-    def trunc_gauss(self, mu, sigma, bottom, top):
-        a = random.gauss(mu, sigma)
-        while not (bottom <= a <= top):
-            a = random.gauss(mu, sigma)
-        return a
-
-    def getXY(self, stimulation):
-        stimulation=120
-        type_neuron = type(self).__name__[-3:]
-        row = df[
-            (df['Type'] == type_neuron) &
-            (df['Freq'] == self.firing_rate) &
-            (df['pA'] == str(stimulation))
-            ]
-        row = row.iloc[0].tolist()
-        X = self.trunc_gauss(int(row[3]), int(row[4]), int(row[5]), int(row[6]))  # X_mu X_std X_min X_max
-        Y = self.trunc_gauss(int(row[7]), int(row[8]), int(row[9]), int(row[10]))  # X_mu X_std X_min X_max
-        return X,Y
-
 
     def get_input_neighborhood(self):
         freq = 0
@@ -101,7 +115,7 @@ class Neuron:
         return self.accumulate_damage
 
 
-class Neuron_PKC(Neuron):
+class Neuron_PCK(Neuron):
     def __init__(self, firing_rate):
         super().__init__(firing_rate)
 
@@ -109,6 +123,7 @@ class Neuron_PKC(Neuron):
 class Neuron_SOM(Neuron):
     def __init__(self, firing_rate):
         super().__init__(firing_rate)
+
 
 class Neuron_Other(Neuron):
     def __init__(self):
