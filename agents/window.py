@@ -7,7 +7,6 @@ import matplotlib.animation as animation
 from matplotlib import style
 
 
-
 # classe per gestire la finestra di dialogo, mostra in real time la simulazione
 class AgentBased:
     def __init__(self):
@@ -26,33 +25,59 @@ class AgentBased:
         self.GREEN = (0, 255, 0)
         self.RED = (255, 0, 0)
 
-        # Colors
-        # Initialize agents
-        self.num_particles = 50
+        # Create subplots
+        self.fig, (self.ax1, self.ax2, self.ax3) = plt.subplots(3, 1, figsize=(15, 12))
 
-        # Initialize the figure and line object
-        self.fig, self.ax = plt.subplots()
-        self.line, = self.ax.plot([], [], color='g', lw=2)
+        # Configure first graph
+        self.line1, = self.ax1.plot([], [], color='g', lw=2, label='Damage Left')
+        self.ax1.set_xlim(0, 100)
+        self.ax1.set_ylim(-3000, 3000)
+        self.ax1.set_title('Damage Left')
+        self.ax1.legend()
 
-        # Set axis limits
-        self.ax.set_xlim(0, 10)
-        self.ax.set_ylim(0, 1)
+        # Configure second graph
+        self.line2, = self.ax2.plot([], [], color='b', lw=2, label='Damage Right')
+        self.ax2.set_xlim(0, 10)
+        self.ax2.set_ylim(-3000, 3000)
+        self.ax2.set_title('Damage Right')
+        self.ax2.legend()
+
+        # Configure third graph
+        self.line3, = self.ax3.plot([], [], color='r', lw=2, label='Stimuli')
+        self.ax3.set_xlim(0, 100)
+        self.ax3.set_ylim(0, 300)
+        self.ax3.set_title('Stimuli')
+        self.ax3.legend()
 
         # Data storage
-        self.x_data, self.y_data = [], []
+        self.x_data, self.y_data1, self.y_data2, self.y_data3 = [], [], [], []
+
+        plt.ion()  # Enable interactive mode
+
+    def update_graph(self, time_elapsed, damage_left, damage_right, stimuli):
+        # Append data for both graphs
+        self.x_data.append(time_elapsed)
+        self.y_data1.append(damage_left)
+        self.y_data2.append(damage_right)
+        self.y_data3.append(stimuli)
+
+        # Update first graph
+        self.line1.set_data(self.x_data, self.y_data1)
+        self.ax1.set_xlim(max(0, time_elapsed - 100), time_elapsed + 10)
+
+        # Update second graph
+        self.line2.set_data(self.x_data, self.y_data2)
+        self.ax2.set_xlim(max(0, time_elapsed - 100), time_elapsed + 10)
+
+        self.line3.set_data(self.x_data, self.y_data3)
+        self.ax3.set_xlim(max(0, time_elapsed - 100), time_elapsed + 10)
+
+
+        # Redraw canvas
+        self.fig.canvas.draw()
+        plt.pause(0.5)
 
     # Animation update function
-    def animate(self,frame):
-        x, y = frame
-        self.x_data.append(x)
-        self.y_data.append(y)
-
-        self.line.set_data(self.x_data, self.y_data)
-
-        if x > self.ax.get_xlim()[1]:
-            self.ax.set_xlim(self.ax.get_xlim()[0] + 1, x + 1)
-
-        return self.line,
 
     def simulate(self):
         # Simulation loop
@@ -122,19 +147,17 @@ class AgentBased:
                     y += 10
                     x = 0
 
-            time_elapsed = +1
+            time_elapsed += 1
             if stimulis[stimulis_pos][1] == time_elapsed:
                 time_elapsed = 0
                 stimulis_pos += 1 % 5
 
-                # Update the display
+            self.update_graph(time_elapsed, brain.get_damage_l(), brain.get_damage_r(), stimuli)
+
+            # Update the display
             pygame.display.flip()
             clock.tick(60)  # Limit to 60 FPS
 
-        # Create the animation
-        anim = animation.FuncAnimation(self.fig, self.animate, frames=frames, interval=100, blit=True, cache_frame_data=False)
-
-        plt.show()
-
-
         pygame.quit()
+        plt.ioff()  # Disable interactive mode
+        plt.show()
