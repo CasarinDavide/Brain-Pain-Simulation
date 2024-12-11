@@ -5,6 +5,7 @@ import amygdala as amygdala
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib import style
+import graph_generator as graph
 
 
 # classe per gestire la finestra di dialogo, mostra in real time la simulazione
@@ -26,19 +27,19 @@ class AgentBased:
         self.RED = (255, 0, 0)
 
         # Create subplots
-        self.fig, (self.ax1, self.ax2, self.ax3) = plt.subplots(3, 1, figsize=(15, 12))
+        self.fig, (self.ax1, self.ax2, self.ax3) = plt.subplots(3, 1, figsize=(12, 10))
 
         # Configure first graph
         self.line1, = self.ax1.plot([], [], color='g', lw=2, label='Damage Left')
         self.ax1.set_xlim(0, 100)
-        self.ax1.set_ylim(-3000, 3000)
+        self.ax1.set_ylim(-4000, 4000)
         self.ax1.set_title('Damage Left')
         self.ax1.legend()
 
         # Configure second graph
         self.line2, = self.ax2.plot([], [], color='b', lw=2, label='Damage Right')
         self.ax2.set_xlim(0, 10)
-        self.ax2.set_ylim(-3000, 3000)
+        self.ax2.set_ylim(-4000, 4000)
         self.ax2.set_title('Damage Right')
         self.ax2.legend()
 
@@ -85,7 +86,7 @@ class AgentBased:
         clock = pygame.time.Clock()
 
         # pA and duration
-        stimulis = [(120, 1200), (160, 23), (180, 123), (220, 100)]
+        stimulis = [(120, 50), (140, 50),(160, 50), (180, 50),(200, 50), (220, 50)]
         brain = amygdala.Brain(neurons_number=1680, SOM_RS_rate=0.27, SOM_LF_rate=0.18,
                                SOM_SP_rate=0.55, PCK_RS_rate=0.48, PCK_LF_rate=0.25,
                                PCK_SP_rate=0.27, SOM_SOM_connectivity=0.55, SOM_PCK_connectivity=0.15,
@@ -93,6 +94,10 @@ class AgentBased:
                                PCK_SOM_connectivity=0.10, PCK_other_connectivity=0.70, SOM_rate=0.4, PCK_rate=0.4,
                                others_rate=0.2,
                                in_min_connection=0, in_max_connection=5, out_min_connection=0, out_max_connection=5)
+
+        # lista contenente [ numero nodi totali, popolazione SOM, popolazione PCK, popolazione OTHER]
+        network = brain.get_network_r()
+        #graph.plot_neurons_container(network[1].list + network[2].list + network[3].list)
 
         time_elapsed = 0
         stimulis_pos = 0
@@ -149,7 +154,6 @@ class AgentBased:
 
             time_elapsed += 1
             if stimulis[stimulis_pos][1] == time_elapsed:
-                time_elapsed = 0
                 stimulis_pos += 1 % 5
 
             self.update_graph(time_elapsed, brain.get_damage_l(), brain.get_damage_r(), stimuli)

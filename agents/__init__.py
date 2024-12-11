@@ -1,7 +1,5 @@
 import window as window
+import amygdala
 
-
-
-# Run the simulation
-simulation = window.AgentBased()
-simulation.simulate()
+agent = window.AgentBased()
+agent.simulate()
