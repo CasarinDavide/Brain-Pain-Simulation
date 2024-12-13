@@ -127,4 +127,4 @@ class Neuron_SOM(Neuron):
 
 class Neuron_Other(Neuron):
     def __init__(self):
-        super().__init__()
+        super().__init__("X")

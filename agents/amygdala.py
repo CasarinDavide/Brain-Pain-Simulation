@@ -3,7 +3,6 @@ import random
 import queue
 import neuron_agent as neuronAgent
 
-
 class Neurons_Container:
     def __init__(self, max_out_degree, max_in_degree):
         self.list = []
@@ -42,12 +41,17 @@ class Neurons_Container:
         return self.max_in_degree
 
     def calculate_freq(self, neuron):
-        return;
+        return
 
     def get_total_freq(self):
         accumulative_freq = 0
         for neuron_element in self.list:
             neuron = neuron_element.neuron
+            # ho sbagliato logica
+            # 0 -> silenziato
+            # 1 -> non silenziato
+            if not neuron.is_silence:
+                continue
             if neuron.get_firing_rate_type() == 'SP':
                 continue
             accumulative_freq += self.calculate_freq(neuron)
@@ -116,7 +120,7 @@ class Neuron_Container_PCK(Neurons_Container):
         super().insert(neuron)
 
     def calculate_freq(self, neuron):
-        return neuron.get_damage() * neuron.get_frequency()
+        return neuron.get_damage()/100 * neuron.get_frequency()
 
 
 class Neuron_Container_SOM(Neurons_Container):
@@ -233,8 +237,8 @@ class Amygdala:
         return self.population_PCK.list + self.population_SOM.list + self.population_Other.list
 
     def update_states(self, stimuli, cumulative_time_stimuli):
-        self.population_SOM.react_to_stimuli(stimuli,cumulative_time_stimuli)
-        self.population_PCK.react_to_stimuli(stimuli,cumulative_time_stimuli)
+        self.population_SOM.react_to_stimuli(stimuli, cumulative_time_stimuli)
+        self.population_PCK.react_to_stimuli(stimuli, cumulative_time_stimuli)
         # magari un giorno ...
         # self.population_Other.react_to_stimuli(cumulative_time_stimuli,stimuli)
 
@@ -283,6 +287,10 @@ class Brain:
                                      PCK_PCK_connectivity,
                                      PCK_SOM_connectivity, PCK_other_connectivity, SOM_rate, PCK_rate, others_rate,
                                      in_min_connection, in_max_connection, out_min_connection, out_max_connection)
+
+    def get_network_r(self):
+        return [self.amygdala_r.neurons_number, self.amygdala_r.population_SOM, self.amygdala_r.population_PCK,
+                self.amygdala_r.population_Other]
 
     def get_damage_r(self):
         return self.amygdala_r.population_PCK.get_total_freq() - self.amygdala_r.population_SOM.get_total_freq()
