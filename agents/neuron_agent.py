@@ -1,4 +1,4 @@
-# TYPE PCK e SOM e OTHER
+# TYPE PKC e SOM e OTHER
 #
 import random
 import pandas as pd
@@ -13,6 +13,9 @@ df = pd.read_csv('agents/data_csv/firing_data.csv', sep=';', header=0, dtype=dty
 
 
 def trunc_gauss(mu, sigma, bottom, top):
+
+    if mu > top:
+        c = 10
     a = random.gauss(mu, sigma)
     while not (bottom <= a <= top):
         a = random.gauss(mu, sigma)
@@ -83,7 +86,7 @@ class Neuron:
     def update_frequency(self, stimulation):
 
         if self.firing_rate == 'SP':
-            if type(self) == Neuron_PCK:
+            if type(self) == Neuron_PKC:
                 return 4.8
             elif type(self) == Neuron_SOM:
                 return 2.1
@@ -115,7 +118,7 @@ class Neuron:
         return self.accumulate_damage
 
 
-class Neuron_PCK(Neuron):
+class Neuron_PKC(Neuron):
     def __init__(self, firing_rate):
         super().__init__(firing_rate)
 

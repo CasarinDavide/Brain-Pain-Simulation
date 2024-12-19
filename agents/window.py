@@ -40,7 +40,7 @@ class AgentBased:
 
         # Configure second graph
         self.line2, = self.ax2.plot([], [], color='b', lw=2, label='Damage Right')
-        self.ax2.set_xlim(0, 10)
+        self.ax2.set_xlim(0, 100)
         self.ax2.set_ylim(-4000, 4000)
         self.ax2.set_title('Damage Right')
         #self.ax2.set_xlabel('Time (seconds)')
@@ -50,7 +50,7 @@ class AgentBased:
         # Configure third graph
         self.line3, = self.ax3.plot([], [], color='r', lw=2, label='Stimuli')
         self.ax3.set_xlim(0, 100)
-        self.ax3.set_ylim(0, 300)
+        self.ax3.set_ylim(0, 500)
         self.ax3.set_title('Stimuli')
         #self.ax3.set_xlabel('Time (seconds)')
         self.ax3.set_ylabel('Stimuli')
@@ -70,21 +70,20 @@ class AgentBased:
 
         # Update first graph
         self.line1.set_data(self.x_data, self.y_data1)
-        self.ax1.set_xlim(max(0, time_elapsed - 100), time_elapsed + 10)
+        self.ax1.set_xlim(0, time_elapsed)
 
         # Update second graph
         self.line2.set_data(self.x_data, self.y_data2)
-        self.ax2.set_xlim(max(0, time_elapsed - 100), time_elapsed + 10)
+        self.ax2.set_xlim(0, time_elapsed)
 
         self.line3.set_data(self.x_data, self.y_data3)
-        self.ax3.set_xlim(max(0, time_elapsed - 100), time_elapsed + 10)
-
+        self.ax3.set_xlim(0, time_elapsed)
 
         # Redraw canvas
         self.fig.canvas.draw()
         plt.pause(0.5)
 
-    # Animation update function
+
 
     def simulate(self):
         # Simulation loop
@@ -92,21 +91,22 @@ class AgentBased:
         clock = pygame.time.Clock()
 
         # pA and duration
-        stimulis = [(120, 20), (140, 20), (160, 20), (180, 20), (200, 20), (220, 20)]
+        stimulis = [(120, 50), (140, 50), (160, 50),(180, 50),(200, 50), (220, 50)]
         brain = amygdala.Brain(neurons_number=1680, SOM_RS_rate=0.27, SOM_LF_rate=0.18,
-                               SOM_SP_rate=0.55, PCK_RS_rate=0.48, PCK_LF_rate=0.25,
-                               PCK_SP_rate=0.27, SOM_SOM_connectivity=0.55, SOM_PCK_connectivity=0.15,
-                               SOM_other_connectivity=0.30, PCK_PCK_connectivity=0.20,
-                               PCK_SOM_connectivity=0.10, PCK_other_connectivity=0.70, SOM_rate=0.4, PCK_rate=0.5,
+                               SOM_SP_rate=0.55, PKC_RS_rate=0.48, PKC_LF_rate=0.25,
+                               PKC_SP_rate=0.27, SOM_SOM_connectivity=0.55, SOM_PKC_connectivity=0.15,
+                               SOM_other_connectivity=0.30, PKC_PKC_connectivity=0.20,
+                               PKC_SOM_connectivity=0.10, PKC_other_connectivity=0.70, SOM_rate=0.4, PKC_rate=0.5,
                                others_rate=0.1,
                                in_min_connection=0, in_max_connection=5, out_min_connection=0, out_max_connection=5)
 
-        # lista contenente [ numero nodi totali, popolazione SOM, popolazione PCK, popolazione OTHER]
-        network = brain.get_network_r()
-        graph.plot_neurons_container(network[1].list + network[2].list + network[3].list)
+        # lista contenente [ numero nodi totali, popolazione SOM, popolazione PKC, popolazione OTHER]
+        #network = brain.get_network_r()
+        #graph.plot_neurons_container(network[1].list + network[2].list + network[3].list)
 
         time_elapsed = 0
         stimulis_pos = 0
+        current_time = 0
 
         while running:
             for event in pygame.event.get():
@@ -134,14 +134,14 @@ class AgentBased:
                 frequency = neuron.get_frequency()
 
                 # Initialize the color based on neuron type
-                if type(neuron).__name__[-3:] == 'PCK':
+                if type(neuron).__name__[-3:] == 'PKC':
                     color = self.RED
                 elif type(neuron).__name__[-3:] == 'SOM':
                     color = self.BLUE
                 else:
                     color = self.GREEN
 
-                if type(neuron).__name__[-3:] == 'PCK' or type(neuron).__name__[-3:] == 'SOM':
+                if type(neuron).__name__[-3:] == 'PKC' or type(neuron).__name__[-3:] == 'SOM':
                     # Calculate the brightness factor
                     frequency = frequency  # Get the neuron's frequency
                     max_frequency = 15  # Define a maximum frequency for scaling
@@ -158,10 +158,14 @@ class AgentBased:
                     y += 10
                     x = 0
 
-            time_elapsed += 1
-            if stimulis[stimulis_pos][1] == time_elapsed:
-                stimulis_pos += 1 % 5
 
+            current_time += 1
+            time_elapsed += 1
+            if stimulis[stimulis_pos][1] == current_time:
+                stimulis_pos += 1
+                current_time = 0
+            if stimulis_pos >= len(stimulis):
+                running = False
             self.update_graph(time_elapsed, brain.get_damage_l(), brain.get_damage_r(), stimuli)
 
             # Update the display
@@ -170,4 +174,8 @@ class AgentBased:
 
         pygame.quit()
         plt.ioff()  # Disable interactive mode
+        self.ax1.set_xlim(0, time_elapsed)
+        self.ax2.set_xlim(0, time_elapsed)
+        self.ax3.set_xlim(0, time_elapsed)
         plt.show()
+
