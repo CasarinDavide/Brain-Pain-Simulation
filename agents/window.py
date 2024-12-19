@@ -91,7 +91,8 @@ class AgentBased:
         clock = pygame.time.Clock()
 
         # pA and duration
-        stimulis = [(120, 50), (140, 50), (160, 50),(180, 50),(200, 50), (220, 50)]
+        #stimulis = [(120, 50), (140, 50), (160, 50),(180, 50),(200, 50), (220, 50)]
+        stimulis = [(120, 50), (120, 50), (120, 50),(120, 50),(120, 50), (120, 50)]
         brain = amygdala.Brain(neurons_number=1680, SOM_RS_rate=0.27, SOM_LF_rate=0.18,
                                SOM_SP_rate=0.55, PKC_RS_rate=0.48, PKC_LF_rate=0.25,
                                PKC_SP_rate=0.27, SOM_SOM_connectivity=0.55, SOM_PKC_connectivity=0.15,
